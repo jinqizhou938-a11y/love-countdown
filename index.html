@@ -1,0 +1,477 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="format-detection" content="telephone=no, email=no, address=no" />
+    <title>见面倒计时</title>
+    <style>
+      :root {
+        --text: rgba(255, 255, 255, 0.92);
+        --muted: rgba(255, 255, 255, 0.72);
+        --stroke: rgba(255, 255, 255, 0.22);
+        --shadow: 0 18px 60px rgba(0, 0, 0, 0.45);
+        --accentA: #ff6aa6;
+        --accentB: #a78bfa;
+        --accentC: #fbbf24;
+      }
+      * {
+        box-sizing: border-box;
+      }
+      html,
+      body {
+        height: 100%;
+      }
+      body {
+        margin: 0;
+        color: var(--text);
+        font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "PingFang SC",
+          "Hiragino Sans GB", "Microsoft YaHei", Arial, sans-serif;
+        overflow: hidden;
+        background: radial-gradient(60% 55% at 70% 20%, rgba(255, 106, 166, 0.25), rgba(0, 0, 0, 0) 60%),
+          radial-gradient(60% 55% at 20% 70%, rgba(167, 139, 250, 0.26), rgba(0, 0, 0, 0) 60%),
+          linear-gradient(180deg, #0b0b12, #070710);
+      }
+      .wrap {
+        position: relative;
+        height: 100%;
+        display: grid;
+        place-items: center;
+        padding: calc(18px + env(safe-area-inset-top)) 16px calc(18px + env(safe-area-inset-bottom));
+      }
+      .card {
+        width: min(560px, 92vw);
+        border-radius: 26px;
+        background: linear-gradient(180deg, rgba(255, 255, 255, 0.18), rgba(255, 255, 255, 0.08));
+        border: 1px solid var(--stroke);
+        box-shadow: var(--shadow);
+        backdrop-filter: blur(18px);
+        -webkit-backdrop-filter: blur(18px);
+        overflow: hidden;
+      }
+      .cardHeader {
+        padding: 18px 18px 12px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 14px;
+      }
+      .title {
+        display: grid;
+        gap: 6px;
+      }
+      .titleTop {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        font-weight: 800;
+        letter-spacing: 0.4px;
+        font-size: 18px;
+      }
+      .badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 7px 10px;
+        border-radius: 999px;
+        border: 1px solid rgba(255, 255, 255, 0.26);
+        background: rgba(0, 0, 0, 0.18);
+        color: rgba(255, 255, 255, 0.88);
+        font-size: 12px;
+        user-select: none;
+      }
+      .dot {
+        width: 7px;
+        height: 7px;
+        border-radius: 99px;
+        background: conic-gradient(from 180deg, var(--accentA), var(--accentB), var(--accentC), var(--accentA));
+        box-shadow: 0 0 18px rgba(255, 106, 166, 0.55);
+      }
+      .sub {
+        font-size: 13px;
+        color: var(--muted);
+        line-height: 1.45;
+      }
+      .pill {
+        margin-left: auto;
+        display: grid;
+        gap: 6px;
+        text-align: right;
+        min-width: 160px;
+      }
+      .pillLabel {
+        font-size: 12px;
+        color: rgba(255, 255, 255, 0.7);
+      }
+      .pillValue {
+        font-size: 13px;
+        color: rgba(255, 255, 255, 0.9);
+        font-weight: 700;
+      }
+      .hero {
+        padding: 0 18px 14px;
+      }
+      .heroFrame {
+        border-radius: 20px;
+        border: 1px solid rgba(255, 255, 255, 0.18);
+        background: rgba(0, 0, 0, 0.12);
+        overflow: hidden;
+        box-shadow: 0 14px 40px rgba(0, 0, 0, 0.26);
+      }
+      .heroImg {
+        display: block;
+        width: 100%;
+        height: min(40vh, 280px);
+        object-fit: cover;
+      }
+      .divider {
+        height: 1px;
+        background: linear-gradient(90deg, rgba(255, 255, 255, 0), rgba(255, 255, 255, 0.35), rgba(255, 255, 255, 0));
+      }
+      .countdown {
+        padding: 18px 18px 20px;
+      }
+      .labelRow {
+        display: flex;
+        align-items: baseline;
+        justify-content: space-between;
+        gap: 14px;
+        margin-bottom: 12px;
+      }
+      .label {
+        font-size: 14px;
+        color: rgba(255, 255, 255, 0.82);
+        font-weight: 700;
+        letter-spacing: 0.4px;
+      }
+      .live {
+        display: inline-flex;
+        align-items: center;
+        gap: 10px;
+        padding: 7px 12px;
+        border-radius: 999px;
+        border: 1px solid rgba(255, 255, 255, 0.22);
+        background: rgba(0, 0, 0, 0.2);
+        color: rgba(255, 255, 255, 0.85);
+        font-size: 12px;
+      }
+      .pulse {
+        width: 8px;
+        height: 8px;
+        border-radius: 99px;
+        background: rgba(255, 106, 166, 0.95);
+        box-shadow: 0 0 0 0 rgba(255, 106, 166, 0.55);
+        animation: pulse 1.8s infinite;
+      }
+      @keyframes pulse {
+        0% {
+          box-shadow: 0 0 0 0 rgba(255, 106, 166, 0.55);
+        }
+        70% {
+          box-shadow: 0 0 0 12px rgba(255, 106, 166, 0);
+        }
+        100% {
+          box-shadow: 0 0 0 0 rgba(255, 106, 166, 0);
+        }
+      }
+      .grid {
+        display: grid;
+        grid-template-columns: 1fr 14px 1fr 14px 1fr 14px 1fr;
+        align-items: center;
+        gap: 10px;
+      }
+      .sep {
+        height: 56px;
+        display: grid;
+        place-items: center;
+        color: rgba(255, 255, 255, 0.55);
+        font-size: 18px;
+        font-weight: 800;
+        user-select: none;
+      }
+      .unit {
+        display: grid;
+        gap: 8px;
+        justify-items: center;
+      }
+      .tile {
+        width: 100%;
+        padding: 14px 10px;
+        border-radius: 18px;
+        border: 1px solid rgba(255, 255, 255, 0.18);
+        background: rgba(0, 0, 0, 0.16);
+        box-shadow: 0 10px 35px rgba(0, 0, 0, 0.24);
+        position: relative;
+        overflow: hidden;
+      }
+      .tile::before {
+        content: "";
+        position: absolute;
+        inset: -2px;
+        background: radial-gradient(140px 90px at 20% 20%, rgba(255, 106, 166, 0.22), rgba(0, 0, 0, 0) 60%),
+          radial-gradient(140px 90px at 80% 70%, rgba(167, 139, 250, 0.22), rgba(0, 0, 0, 0) 60%);
+        opacity: 0.9;
+        pointer-events: none;
+      }
+      .num {
+        position: relative;
+        font-variant-numeric: tabular-nums;
+        font-size: clamp(30px, 6vw, 46px);
+        font-weight: 900;
+        line-height: 1;
+        letter-spacing: 1.2px;
+        text-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
+      }
+      .unitLabel {
+        font-size: 12px;
+        color: rgba(255, 255, 255, 0.72);
+        letter-spacing: 0.8px;
+      }
+      .footer {
+        padding: 0 18px 18px;
+        display: grid;
+        gap: 10px;
+      }
+      .quote {
+        padding: 12px 14px;
+        border-radius: 16px;
+        border: 1px solid rgba(255, 255, 255, 0.18);
+        background: rgba(0, 0, 0, 0.14);
+        color: rgba(255, 255, 255, 0.82);
+        line-height: 1.6;
+        font-size: 13px;
+      }
+      .names {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 10px;
+        color: rgba(255, 255, 255, 0.78);
+        font-size: 12px;
+      }
+      .names strong {
+        color: rgba(255, 255, 255, 0.92);
+        font-weight: 800;
+      }
+      .heartLayer {
+        position: fixed;
+        inset: 0;
+        pointer-events: none;
+        overflow: hidden;
+      }
+      .heart {
+        position: absolute;
+        left: var(--x);
+        top: var(--y);
+        width: var(--s);
+        height: var(--s);
+        transform: translate(-50%, -50%) rotate(45deg);
+        opacity: 0;
+        filter: drop-shadow(0 10px 22px rgba(0, 0, 0, 0.25));
+        animation: floatUp var(--d) ease-in-out forwards;
+      }
+      .heart::before,
+      .heart::after {
+        content: "";
+        position: absolute;
+        width: 100%;
+        height: 100%;
+        background: radial-gradient(circle at 30% 30%, rgba(255, 255, 255, 0.35), rgba(255, 255, 255, 0) 60%),
+          linear-gradient(135deg, rgba(255, 106, 166, 0.92), rgba(167, 139, 250, 0.86));
+        border-radius: 18%;
+      }
+      .heart::before {
+        border-radius: 50%;
+        transform: translateX(-50%);
+      }
+      .heart::after {
+        border-radius: 50%;
+        transform: translateY(-50%);
+      }
+      @keyframes floatUp {
+        0% {
+          opacity: 0;
+          transform: translate(-50%, -50%) rotate(45deg) scale(0.7);
+        }
+        10% {
+          opacity: 0.7;
+        }
+        60% {
+          opacity: 0.55;
+        }
+        100% {
+          opacity: 0;
+          transform: translate(calc(-50% + var(--dx)), calc(-50% - var(--dy))) rotate(45deg) scale(1.1);
+        }
+      }
+      @media (prefers-reduced-motion: reduce) {
+        .heart,
+        .pulse {
+          animation: none !important;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="heartLayer" id="heartLayer" aria-hidden="true"></div>
+    <main class="wrap">
+      <section class="card" role="group" aria-label="情侣见面倒计时">
+        <header class="cardHeader">
+          <div class="title">
+            <div class="titleTop">
+              <span class="badge"><span class="dot"></span>情侣见面倒计时</span>
+            </div>
+            <div class="sub" id="subtitle">长相思兮长相忆，短相思兮无穷极</div>
+          </div>
+          <div class="pill" aria-label="目标时间">
+            <div class="pillLabel">截止时间</div>
+            <div class="pillValue" id="targetText">4月25日 21:00</div>
+          </div>
+        </header>
+        <div class="hero" aria-label="照片">
+          <div class="heroFrame">
+            <img class="heroImg" src="./背景图片.jpg" alt="我们的照片" />
+          </div>
+        </div>
+        <div class="divider" aria-hidden="true"></div>
+        <div class="countdown">
+          <div class="labelRow">
+            <div class="label" id="statusText">距离见面还有</div>
+            <div class="live" aria-label="实时更新">
+              <span class="pulse" aria-hidden="true"></span>
+              精确到秒
+            </div>
+          </div>
+          <div class="grid" aria-label="倒计时数字">
+            <div class="unit">
+              <div class="tile"><div class="num" id="d">00</div></div>
+              <div class="unitLabel">天</div>
+            </div>
+            <div class="sep">:</div>
+            <div class="unit">
+              <div class="tile"><div class="num" id="h">00</div></div>
+              <div class="unitLabel">时</div>
+            </div>
+            <div class="sep">:</div>
+            <div class="unit">
+              <div class="tile"><div class="num" id="m">00</div></div>
+              <div class="unitLabel">分</div>
+            </div>
+            <div class="sep">:</div>
+            <div class="unit">
+              <div class="tile"><div class="num" id="s">00</div></div>
+              <div class="unitLabel">秒</div>
+            </div>
+          </div>
+        </div>
+        <div class="footer">
+          <div class="quote" id="quote">
+            你在的方向，就是我奔赴的理由。等这串数字归零，我们就见面啦。
+          </div>
+          <div class="names">
+            <div>To <strong>你</strong></div>
+            <div id="todayText"></div>
+            <div>From <strong>我</strong></div>
+          </div>
+        </div>
+      </section>
+    </main>
+    <script>
+      const getTarget = () => {
+        const now = new Date();
+        const t = new Date(now.getFullYear(), 3, 25, 21, 0, 0);
+        if (t.getTime() < now.getTime()) t.setFullYear(t.getFullYear() + 1);
+        return t;
+      };
+      const target = getTarget();
+      const elD = document.getElementById("d");
+      const elH = document.getElementById("h");
+      const elM = document.getElementById("m");
+      const elS = document.getElementById("s");
+      const statusText = document.getElementById("statusText");
+      const subtitle = document.getElementById("subtitle");
+      const quote = document.getElementById("quote");
+      const targetText = document.getElementById("targetText");
+      const todayText = document.getElementById("todayText");
+      const heartLayer = document.getElementById("heartLayer");
+      const fmt2 = (n) => String(n).padStart(2, "0");
+      const fmtDate = (d) => {
+        const mm = d.getMonth() + 1;
+        const dd = d.getDate();
+        const hh = fmt2(d.getHours());
+        const mi = fmt2(d.getMinutes());
+        return `${mm}月${dd}日 ${hh}:${mi}`;
+      };
+      targetText.textContent = fmtDate(target);
+      const updateToday = () => {
+        const now = new Date();
+        const mm = now.getMonth() + 1;
+        const dd = now.getDate();
+        const hh = fmt2(now.getHours());
+        const mi = fmt2(now.getMinutes());
+        const ss = fmt2(now.getSeconds());
+        todayText.textContent = `${mm}月${dd}日 ${hh}:${mi}:${ss}`;
+      };
+      const setNums = (diffMs) => {
+        const totalSeconds = Math.max(0, Math.floor(diffMs / 1000));
+        const days = Math.floor(totalSeconds / 86400);
+        const hours = Math.floor((totalSeconds % 86400) / 3600);
+        const minutes = Math.floor((totalSeconds % 3600) / 60);
+        const seconds = totalSeconds % 60;
+        elD.textContent = fmt2(days);
+        elH.textContent = fmt2(hours);
+        elM.textContent = fmt2(minutes);
+        elS.textContent = fmt2(seconds);
+      };
+      let lastSecond = null;
+      const tick = () => {
+        const now = new Date();
+        const diff = target.getTime() - now.getTime();
+        const sec = Math.floor(now.getTime() / 1000);
+        if (sec !== lastSecond) {
+          lastSecond = sec;
+          updateToday();
+          setNums(diff);
+          if (diff <= 0) {
+            statusText.textContent = "我们见面啦";
+            subtitle.textContent = "此刻开始，所有想念都有了拥抱的答案。";
+            quote.textContent = "归零不是结束，是甜蜜的开场。";
+          }
+        }
+        requestAnimationFrame(tick);
+      };
+      const rand = (min, max) => min + Math.random() * (max - min);
+      const spawnHeart = (x, y) => {
+        if (window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+        const heart = document.createElement("div");
+        const size = Math.round(rand(14, 26));
+        const dx = `${Math.round(rand(-60, 60))}px`;
+        const dy = `${Math.round(rand(120, 220))}px`;
+        const dur = `${rand(2.4, 4.2).toFixed(2)}s`;
+        heart.className = "heart";
+        heart.style.setProperty("--x", `${x}px`);
+        heart.style.setProperty("--y", `${y}px`);
+        heart.style.setProperty("--s", `${size}px`);
+        heart.style.setProperty("--dx", dx);
+        heart.style.setProperty("--dy", dy);
+        heart.style.setProperty("--d", dur);
+        heartLayer.appendChild(heart);
+        window.setTimeout(() => {
+          heart.remove();
+        }, 5200);
+      };
+      const gentleHearts = () => {
+        const w = window.innerWidth;
+        const h = window.innerHeight;
+        const x = rand(w * 0.18, w * 0.82);
+        const y = rand(h * 0.64, h * 0.92);
+        spawnHeart(x, y);
+      };
+      document.addEventListener("pointerdown", (e) => {
+        spawnHeart(e.clientX, e.clientY);
+      });
+      window.setInterval(gentleHearts, 520);
+      tick();
+    </script>
+  </body>
+</html>
